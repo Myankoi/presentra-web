@@ -126,4 +126,4 @@ Middleware `ProtectedRoute` akan otomatis redirect ke `/login` jika:
 ## 🔗 Repositori Terkait
 
 - **Backend API:** `presentra-api` — REST API dengan Express.js + Prisma
-- **Mobile App:** `presentra-app` — Aplikasi Flutter untuk guru & siswa
+- **Mobile App:** `presentra-mobile` — Aplikasi Flutter untuk guru & siswa
