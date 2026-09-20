@@ -1,78 +1,125 @@
-# Presentra Web — Admin Dashboard
+# Presentra Web
 
-Aplikasi web admin untuk sistem **Presentra**, platform manajemen absensi berbasis QR code untuk sekolah. Dibangun dengan React + Vite + TypeScript, terintegrasi dengan Firebase Authentication dan REST API backend.
+Admin dashboard for **Presentra**, a QR-based school attendance management system. This frontend provides school administrators and counseling staff with tools to manage academic data, monitor attendance, review analytics, and export reports.
 
----
+Presentra Web is powered by Firebase Authentication and communicates with the [Presentra API](https://github.com/Myankoi/presentra-api), which handles authorization, business logic, notifications, and MySQL persistence.
 
-## ✨ Fitur Utama
+## Features
 
-| Halaman | Path | Deskripsi |
-|---|---|---|
-| Dashboard | `/` | Ringkasan data: total siswa, guru, kelas, absensi hari ini, dan grafik mingguan |
-| Pengguna | `/pengguna` | Manajemen akun guru, sekretaris, dan BK |
-| Kelas | `/kelas` | Manajemen kelas beserta QR code presensi |
-| Siswa | `/siswa` | Manajemen data siswa per kelas |
-| Mata Pelajaran | `/mapel` | Manajemen daftar mata pelajaran |
-| Jadwal Mengajar | `/jadwal-mengajar` | Timetable jadwal mengajar guru per kelas per hari |
-| Jadwal Piket | `/jadwal-piket` | Jadwal piket guru harian |
-| Laporan | `/laporan` | Rekapitulasi absensi siswa dengan export |
-| BK | `/bk` | Statistik absensi untuk keperluan Bimbingan Konseling |
-| Notifikasi | `/notifikasi` | Inbox notifikasi pengguna |
+| Page | Route | Description | Access |
+| --- | --- | --- | --- |
+| Dashboard | `/` | School-wide attendance summary and attendance trends | Admin, BK |
+| Users | `/pengguna` | Manage user accounts and roles | Admin |
+| Classes | `/kelas` | Manage classes and class QR codes | Admin |
+| Students | `/siswa` | Manage students and class assignments | Admin |
+| Subjects | `/mapel` | Manage subjects and subject codes | Admin |
+| Teaching Schedule | `/jadwal-mengajar` | Manage teaching schedules and bulk imports | Admin |
+| Duty Schedule | `/jadwal-piket` | Manage teacher duty schedules | Admin |
+| Reports | `/laporan` | Review attendance recaps and export Excel reports | Admin, BK |
+| BK Analytics | `/bk` | Review daily attendance statistics and absence rankings | Admin, BK |
+| Notifications | `/notifikasi` | View and manage user notifications | Authenticated dashboard users |
 
-**Akses:** Hanya pengguna dengan role `admin` atau `bk` yang dapat login ke dashboard ini.
+The current web dashboard is restricted to the `admin` and `bk` roles. The API also supports `guru` and `sekretaris` clients, such as a mobile application or another frontend.
 
----
+## Architecture
 
-## 🛠️ Tech Stack
+```text
+User
+  │
+  ▼
+Firebase Authentication
+  │ Firebase ID token
+  ▼
+Presentra Web (React + Vite)
+  │ Authorization: Bearer <Firebase ID token>
+  ▼
+Presentra API (Express + TypeScript)
+  │ Drizzle ORM
+  ▼
+MySQL
+```
 
-- **Framework:** React 19 + Vite 7
+The frontend uses an Axios client configured with `VITE_API_URL`. A request interceptor attaches the current Firebase ID token to API requests. When the API returns `401 Unauthorized`, the frontend signs the user out and redirects to `/login`.
+
+## Tech Stack
+
+- **Framework:** React 19
+- **Build tool:** Vite 7
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS v4
-- **UI Components:** shadcn/ui (Radix UI)
-- **Routing:** React Router DOM v7
-- **Auth:** Firebase Authentication
-- **HTTP Client:** Axios
+- **Styling:** Tailwind CSS 4
+- **UI:** shadcn/ui, Radix UI, and Lucide React
+- **Routing:** React Router DOM 7
+- **Authentication:** Firebase Authentication
+- **HTTP client:** Axios
 - **Charts:** Recharts
+- **QR rendering:** React QR Code
 - **Notifications:** Sonner
 
----
+## Requirements
 
-## 🚀 Instalasi & Menjalankan
+- Node.js `20.19+` or `22.12+`
+- npm
+- A Firebase project configured for Email/Password Authentication
+- A running instance of the [Presentra API](https://github.com/Myankoi/presentra-api)
+- MySQL and Firebase Admin credentials for the API
 
-### Prasyarat
+## Getting Started
 
-- Node.js >= 18
-- Backend API **presentra-api** berjalan di `localhost:3000`
+Presentra Web depends on the API repository. Start the backend first, then start this frontend.
 
-### Langkah-langkah
+### 1. Clone both repositories
 
 ```bash
-# 1. Clone repo & masuk ke direktori
-cd presentra-web
+git clone https://github.com/Myankoi/presentra-api.git
+git clone https://github.com/Myankoi/presentra-web.git
+```
 
-# 2. Install dependensi
+### 2. Configure and run the API
+
+```bash
+cd presentra-api
 npm install
+```
 
-# 3. Salin file environment dan isi konfigurasi
-cp .env.example .env
+Create a `.env` file in the API root:
 
-# 4. Jalankan development server
+```env
+PORT=3000
+NODE_ENV=development
+DATABASE_URL=mysql://root:password@localhost:3306/presentra
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
+```
+
+Place the Firebase Admin service-account file at the path configured by `FIREBASE_SERVICE_ACCOUNT_PATH`. Do not commit this file.
+
+Prepare the database and start the API:
+
+```bash
+npm run db:push
+npm run db:seed  # optional development/sample data
 npm run dev
 ```
 
-Aplikasi akan berjalan di **http://localhost:5173**.
+The API runs at `http://localhost:3000` and exposes its routes under `http://localhost:3000/api`.
 
----
+For the complete API setup, endpoint reference, database notes, and security guidance, see the [Presentra API README](https://github.com/Myankoi/presentra-api#readme).
 
-## ⚙️ Konfigurasi Environment
+### 3. Configure and run the web dashboard
 
-Buat file `.env` di root project berdasarkan variabel berikut:
+From the web repository:
+
+```bash
+cd presentra-web
+npm install
+```
+
+Create a `.env` file in the project root:
 
 ```env
-# URL REST API backend
+# Presentra API base URL, including the /api prefix
 VITE_API_URL=http://localhost:3000/api
 
-# Firebase Web Config (dari Firebase Console > Project Settings)
+# Firebase Web configuration
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
@@ -81,49 +128,131 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 ```
 
-> **Catatan:** Semua variabel wajib diisi. Pastikan Firebase project yang digunakan sama dengan yang dipakai di backend.
+Copy the Firebase Web configuration values from **Firebase Console → Project settings → Your apps**. The Firebase project must match the Firebase project used by the API.
 
----
+Start the development server:
 
-## 📦 Scripts
-
-| Command | Deskripsi |
-|---|---|
-| `npm run dev` | Jalankan development server |
-| `npm run build` | Build untuk production |
-| `npm run preview` | Preview hasil build production |
-| `npm run lint` | Jalankan ESLint |
-
----
-
-## 📁 Struktur Folder
-
+```bash
+npm run dev
 ```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Environment Variables
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | Yes | Base URL of the Presentra API, normally ending in `/api` |
+| `VITE_FIREBASE_API_KEY` | Yes | Firebase Web API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Yes | Firebase Authentication domain |
+| `VITE_FIREBASE_PROJECT_ID` | Yes | Firebase project identifier |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Yes | Firebase Storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes | Firebase Cloud Messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Yes | Firebase Web app ID |
+
+Vite exposes variables prefixed with `VITE_` to browser code. Do not put database credentials, Firebase Admin credentials, service-account JSON, or other server secrets in this file.
+
+## Authentication and Authorization
+
+1. A user signs in with email and password through Firebase Authentication.
+2. The frontend loads the user profile from `GET /api/users/me`.
+3. Axios attaches the Firebase ID token to subsequent API requests.
+4. The API verifies the token and resolves the application role from the database.
+5. `ProtectedRoute` allows the dashboard only for `admin` and `bk` users.
+
+The API supports these roles:
+
+| Role | Responsibility |
+| --- | --- |
+| `admin` | Manage master data, schedules, QR codes, dashboards, and reports |
+| `guru` | Record teacher attendance, view schedules, and monitor attendance |
+| `sekretaris` | Record and review attendance for the assigned class |
+| `bk` | View dashboards, attendance analytics, absence rankings, and reports |
+
+Only `admin` and `bk` are currently allowed into this web dashboard. Role capabilities for `guru` and `sekretaris` are implemented by the API for other clients.
+
+## API Integration
+
+Frontend API calls are grouped by domain in `src/services/`:
+
+| Frontend service | API area |
+| --- | --- |
+| `dashboard.ts` | Dashboard summaries and charts |
+| `pengguna.ts` | User administration and bulk user imports |
+| `kelas.ts` | Class management and QR codes |
+| `siswa.ts` | Student management |
+| `mapel.ts` | Subject management |
+| `jadwal.ts` | Teaching and duty schedules |
+| `laporan.ts` | Attendance recaps and Excel exports |
+| `bk.ts` | Counseling statistics and absence rankings |
+| `notification.ts` | Notifications and unread counts |
+
+The complete endpoint contract is maintained in the [Presentra API repository](https://github.com/Myankoi/presentra-api#api-reference).
+
+## Project Structure
+
+```text
 src/
 ├── components/
-│   ├── layout/        # Sidebar, TopBar, PageContainer
-│   ├── shared/        # ProtectedRoute, komponen bersama
-│   └── ui/            # shadcn/ui components
-├── hooks/             # useAuth, custom hooks
-├── lib/               # Axios instance, Firebase config, utils
-├── pages/             # Satu folder per halaman
-├── services/          # Fungsi API call per domain
-└── types/             # TypeScript interfaces & types global
+│   ├── layout/        # Sidebar, TopBar, and page layout components
+│   ├── shared/        # Protected routes and shared loading states
+│   └── ui/            # Reusable UI components
+├── hooks/             # Authentication and data-fetching hooks
+├── lib/               # Axios, Firebase, and utility modules
+├── pages/             # Dashboard pages grouped by feature
+├── services/          # API calls grouped by domain
+└── types/             # Shared TypeScript models and API response types
 ```
 
----
+## Available Scripts
 
-## 🔐 Autentikasi
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Type-check and build the production bundle |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run ESLint |
 
-Login menggunakan **Firebase Authentication** (email & password). Setelah login, token Firebase dikirim ke backend untuk verifikasi dan mendapatkan data pengguna beserta role-nya.
+## Development Notes
 
-Middleware `ProtectedRoute` akan otomatis redirect ke `/login` jika:
-- Pengguna belum login, atau
-- Role pengguna bukan `admin` atau `bk`
+- Keep the API running while using the dashboard. Most pages load their data from the API during initialization.
+- If requests fail with `401`, verify that the Firebase project, logged-in account, and API service-account configuration are aligned.
+- If the API is running on another host or port, update `VITE_API_URL` and restart the Vite server.
+- For a local database with sample records, run `npm run db:seed` in the API repository.
+- Do not use the API development auth bypass outside local development. Details are documented in the [API authentication guide](https://github.com/Myankoi/presentra-api#authentication).
 
----
+## Security Notes
 
-## 🔗 Repositori Terkait
+- Never commit `.env` files or Firebase service-account JSON files.
+- Never expose API database credentials or Firebase Admin credentials through `VITE_` variables.
+- Use the same Firebase project for the web client and API Admin SDK.
+- Restrict API CORS origins before deploying to production.
+- Disable any development-only authentication bypass outside local development.
+- Avoid sharing real student data in screenshots, issues, examples, or public logs.
 
-- **Backend API:** `presentra-api` — REST API dengan Express.js + Prisma
-- **Mobile App:** `presentra-mobile` — Aplikasi Flutter untuk guru & siswa
+## Related Repositories
+
+- **Backend API:** [Myankoi/presentra-api](https://github.com/Myankoi/presentra-api)
+- **Web dashboard:** [Myankoi/presentra-web](https://github.com/Myankoi/presentra-web)
+
+## GitHub Repository Metadata
+
+Suggested **About** description:
+
+```text
+Admin dashboard for Presentra, a QR-based school attendance management system built with React, Vite, TypeScript, Tailwind CSS, and Firebase Auth.
+```
+
+Suggested repository **Topics**:
+
+```text
+presentra, school-attendance, attendance-system, school-management,
+admin-dashboard, education-technology, react, vite, typescript,
+tailwindcss, firebase-auth, qr-code, rest-api, axios, recharts
+```
+
+These values can be added from **GitHub → Settings → General → Repository details**.
+
+## License
+
+No license is currently declared for this frontend repository.
